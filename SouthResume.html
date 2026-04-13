@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SouthResume</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#F4ECD8;--red:#C0392B;--gold:#C8922A;--sage:#5E7A5A;--bl:#9C7250;--ink:#2C1A0E;--inkl:#4A3020;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--ink);font-family:'Noto Serif SC',serif;overflow-x:hidden;cursor:none;}
+.cursor{width:8px;height:8px;background:var(--red);border-radius:50%;position:fixed;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:transform .12s,background .2s;}
+.cursor-ring{width:32px;height:32px;border:1px solid var(--red);border-radius:50%;position:fixed;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:transform .18s ease-out;opacity:.5;}
+#leaf-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:28px 60px;display:flex;justify-content:space-between;align-items:center;}
+.nav-logo{font-size:24px;letter-spacing:.3em;font-weight:300;opacity:.7;}
+.nav-links{display:flex;gap:40px;list-style:none;}
+.nav-links a{font-size:24px;letter-spacing:.25em;color:var(--inkl);text-decoration:none;font-weight:300;opacity:.7;transition:opacity .3s;font-family:'Noto Sans SC',sans-serif;}
+.nav-links a:hover{opacity:1;}
+
+#hero{position:relative;height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 10vw;z-index:2;overflow:hidden;}
+.ey{font-size:11px;letter-spacing:.5em;color:var(--bl);font-family:'Noto Sans SC',sans-serif;font-weight:300;margin-bottom:28px;opacity:0;animation:fadeUp 1s ease .3s forwards;}
+.hn{font-size:clamp(72px,10vw,140px);font-weight:700;line-height:.9;letter-spacing:-.02em;margin-bottom:44px;opacity:0;animation:fadeUp 1s ease .5s forwards;}
+.hn .r{color:var(--red);}
+.hsub{font-size:clamp(17px,2.2vw,26px);color:var(--bl);font-weight:300;line-height:1.8;letter-spacing:.12em;margin-bottom:36px;opacity:0;animation:fadeUp 1s ease .7s forwards;}
+.hsub-l1{display:block;}
+.hsub-l2{display:block;padding-left:2.4em;opacity:.72;}
+.htags{display:flex;gap:18px;flex-wrap:wrap;opacity:0;animation:fadeUp 1s ease .9s forwards;}
+.htag{font-size:10px;letter-spacing:.3em;color:var(--bl);opacity:.5;font-family:'Noto Sans SC',sans-serif;font-weight:300;pointer-events:none;user-select:none;}
+.hdot{opacity:.25;font-size:10px;color:var(--bl);}
+.hscr{position:absolute;bottom:48px;left:10vw;display:flex;align-items:center;gap:16px;opacity:0;animation:fadeUp 1s ease 1.1s forwards;}
+.hscr span{font-size:10px;letter-spacing:.4em;color:var(--bl);font-family:'Noto Sans SC',sans-serif;font-weight:300;}
+.sline{width:40px;height:1px;background:var(--bl);}
+.hdeco{position:absolute;right:-1vw;top:50%;transform:translateY(-50%);font-size:clamp(80px,13vw,190px);font-weight:700;color:transparent;-webkit-text-stroke:1px rgba(192,57,43,.07);pointer-events:none;user-select:none;line-height:1;letter-spacing:-.03em;}
+
+section{position:relative;z-index:2;}
+.sl{font-size:10px;letter-spacing:.6em;color:var(--bl);font-family:'Noto Sans SC',sans-serif;font-weight:300;margin-bottom:14px;display:flex;align-items:center;gap:16px;}
+.sl::before{content:'';display:inline-block;width:32px;height:1px;background:var(--bl);}
+.st{font-size:clamp(32px,4.5vw,58px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-bottom:48px;}
+
+/* ── WORKS ── */
+#works{background:#EFE5CC;}
+.works-hd{padding:80px 10vw 36px;}
+.shelf-legend{display:flex;gap:36px;margin-top:-20px;margin-bottom:0;}
+.leg{display:flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.2em;color:var(--inkl);font-family:'Noto Sans SC',sans-serif;font-weight:400;}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+.shelf-section{position:relative;width:100%;padding-top:80px;border-bottom:3px solid rgba(107,66,38,.25);overflow:visible;}
+.shelf-section::after{content:'';position:absolute;bottom:-7px;left:0;right:0;height:7px;background:linear-gradient(to bottom,rgba(107,66,38,.12),transparent);pointer-events:none;}
+.spine-row{display:flex;align-items:flex-end;width:100%;}
+
+.cat-div{flex:0 0 2px;height:260px;align-self:flex-end;background:rgba(107,66,38,.22);position:relative;z-index:2;}
+.cat-div::before{content:attr(data-lbl);position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.4em;color:rgba(107,66,38,.42);font-family:'Noto Sans SC',sans-serif;white-space:nowrap;}
+
+/* Floating category labels */
+.cat-group-label{position:absolute;top:18px;pointer-events:none;text-align:center;transition:left .48s cubic-bezier(.16,1,.3,1),width .48s cubic-bezier(.16,1,.3,1);}
+.cat-group-label-inner{display:inline-flex;align-items:center;gap:8px;font-size:18px;letter-spacing:.1em;font-weight:600;color:var(--ink);}
+.cat-group-label-dot{width:8px;height:8px;border-radius:50%;}
+
+.spine-card{position:relative;height:280px;overflow:visible;cursor:pointer;border:none;outline:none;background:#0D0805;border-radius:20px 20px 0 0;flex-shrink:0;transition:width .48s cubic-bezier(.16,1,.3,1),transform .48s cubic-bezier(.16,1,.3,1),box-shadow .36s ease;z-index:1;}
+.spine-inner{position:absolute;inset:0;overflow:hidden;border-radius:20px 20px 0 0;}
+.sp-accent{display:none;}
+.spine-card::before{content:'';position:absolute;inset:0;border-top:4px solid var(--cc);border-left:1.5px solid var(--cc);border-right:1.5px solid var(--cc);border-bottom:none;border-radius:20px 20px 0 0;z-index:60;pointer-events:none;}
+.sp-img{position:absolute;inset:0;background-size:cover;background-position:center;transition:background-size .48s cubic-bezier(.16,1,.3,1);}
+.sp-img.loaded{filter:none;}
+
+.sp-accent{position:absolute;top:0;left:0;right:0;height:5px;background:var(--cc);z-index:55;border-radius:20px 20px 0 0;}
+.sp-vtitle{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px;z-index:3;transition:opacity .22s ease;}
+.spine-card.hov .sp-vtitle{opacity:0;}
+.sp-vt{writing-mode:vertical-rl;font-size:10px;color:rgba(244,236,216,.92);text-shadow:0 1px 8px rgba(0,0,0,.9);letter-spacing:.2em;font-family:'Noto Serif SC',serif;white-space:nowrap;overflow:hidden;max-height:220px;text-overflow:ellipsis;}
+.sp-exp{position:absolute;bottom:0;left:0;right:0;padding:52px 12px 14px;background:linear-gradient(to top,rgba(5,2,1,.97) 0%,rgba(5,2,1,.52) 55%,transparent 100%);opacity:0;transform:translateY(6px);transition:opacity .28s ease .06s,transform .28s ease .06s;z-index:3;}
+.spine-card.hov .sp-exp{opacity:1;transform:translateY(0);}
+.sp-em{font-size:8px;letter-spacing:.28em;color:rgba(244,236,216,.3);font-family:'Noto Sans SC',sans-serif;margin-bottom:4px;}
+.sp-et{font-size:clamp(11px,1.3vw,15px);font-weight:600;color:var(--cream);letter-spacing:.06em;line-height:1.3;margin-bottom:5px;}
+.sp-wip{font-size:8px;letter-spacing:.2em;color:rgba(244,236,216,.28);font-family:'Noto Sans SC',sans-serif;border:1px solid rgba(255,255,255,.12);padding:1px 5px;display:inline-block;}
+.sp-award{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:9px;letter-spacing:.12em;font-family:'Noto Sans SC',sans-serif;font-weight:500;padding:4px 10px;text-align:center;line-height:1.8;opacity:.65;transition:opacity .28s ease;pointer-events:none;z-index:10;width:max-content;}
+.spine-card.hov .sp-award{opacity:1;}
+.sp-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.85);transition:opacity .3s ease,transform .3s cubic-bezier(.16,1,.3,1);z-index:4;pointer-events:none;}
+.spine-card.hov .sp-hint{opacity:1;transform:scale(1);pointer-events:auto;}
+.sp-ring{width:54px;height:54px;border-radius:50%;border:2px solid rgba(244,236,216,.95);background:rgba(244,236,216,.12);display:flex;align-items:center;justify-content:center;position:relative;backdrop-filter:blur(4px);}
+.sp-ring::before{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(244,236,216,.45);animation:spR 2s ease infinite;}
+.sp-ring::after{animation-delay:.7s;}
+@keyframes spR{0%{transform:scale(1);opacity:.5}100%{transform:scale(2.3);opacity:0;}}
+.sp-ring svg{width:18px;height:18px;fill:rgba(244,236,216,.95);margin-left:3px;}
+.shimmer{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);background-size:200% 100%;animation:shim 1.5s ease infinite;}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.g-xiur{background:linear-gradient(160deg,#1A0A06 0%,#5A1A10 45%,#A02515 75%,#C8391F 100%);}
+.g-cyber{background:linear-gradient(160deg,#060A1A 0%,#0D0E35 45%,#1A1060 75%,#2A1680 100%);}
+.g-fgirl{background:linear-gradient(160deg,#1A0A1A 0%,#5A0A45 45%,#8A1260 75%,#B02278 100%);}
+.g-gmorning{background:linear-gradient(160deg,#0A1020 0%,#122040 50%,#1A3870 75%,#2050A8 100%);}
+.g-shishi{background:linear-gradient(160deg,#201408 0%,#5A3014 45%,#8A5020 70%,#C87A30 100%);}
+.g-bniuer{background:linear-gradient(160deg,#1A1008 0%,#3A2010 45%,#6A3818 70%,#9A5828 100%);}
+.g-gala{background:linear-gradient(160deg,#0A0A14 0%,#181828 45%,#28283A 70%,#3A3A50 100%);}
+.g-grow{background:linear-gradient(160deg,#081808 0%,#143014 45%,#265026 70%,#407840 100%);}
+
+
+/* ── DEV SECTION ── */
+.dev-section{background:#E8DFC9;padding:0 0 60px;}
+.dev-hd{padding:40px 10vw 28px;display:flex;align-items:center;gap:16px;justify-content:center;}
+.dev-hd-num{font-size:11px;letter-spacing:.4em;color:var(--sage);font-family:'Noto Sans SC',sans-serif;}
+.dev-hd-title{font-size:18px;font-weight:600;letter-spacing:.1em;}
+.dev-cards{display:flex;gap:2px;overflow:hidden;}
+.dev-card{flex:1;min-width:0;position:relative;height:200px;overflow:hidden;cursor:pointer;border:none;outline:none;background:#0D0805;transition:flex .48s cubic-bezier(.16,1,.3,1),box-shadow .36s ease;z-index:1;}
+.dev-card:hover{flex:2.8;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+.dev-card-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:none;transition:filter .3s ease;}
+.dev-card:hover .dev-card-bg{filter:none;}
+.dev-card-bg::after{content:""}
+.dev-card-accent{position:absolute;top:0;left:0;right:0;height:3px;background:var(--sage);z-index:3;}
+.dev-card-inner{position:absolute;inset:0;padding:20px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(to top,rgba(5,2,1,.9) 0%,rgba(5,2,1,.4) 55%,transparent 100%);z-index:3;}
+.dev-card-meta{font-size:8px;letter-spacing:.35em;color:rgba(244,236,216,.3);font-family:'Noto Sans SC',sans-serif;margin-bottom:5px;}
+.dev-card-title{font-size:16px;font-weight:600;color:var(--cream);letter-spacing:.08em;margin-bottom:8px;}
+.dev-card-desc{font-size:11px;color:rgba(244,236,216,.5);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.7;letter-spacing:.03em;max-height:0;overflow:hidden;transition:max-height .4s ease .05s;}
+.dev-card:hover .dev-card-desc{max-height:120px;}
+.dev-card-tag{font-size:8px;letter-spacing:.2em;color:rgba(244,236,216,.28);font-family:'Noto Sans SC',sans-serif;border:1px solid rgba(255,255,255,.12);padding:1px 6px;display:inline-block;margin-bottom:6px;}
+.dev-card-link{display:inline-flex;align-items:center;gap:8px;font-size:9px;letter-spacing:.3em;color:rgba(244,236,216,.6);font-family:'Noto Sans SC',sans-serif;text-decoration:none;margin-top:8px;max-height:0;overflow:hidden;transition:max-height .4s ease .05s,color .3s;}
+.dev-card:hover .dev-card-link{max-height:40px;}
+.dev-card-link:hover{color:var(--gold);}
+.dev-card-link svg{width:11px;height:11px;stroke:currentColor;}
+.g-dev{background:linear-gradient(160deg,#08101A 0%,#10202E 45%,#183550 75%,#204872 100%);}
+.g-lf{background:linear-gradient(160deg,#140E08 0%,#2A1C10 45%,#482E18 70%,#6A4422 100%);}
+
+/* ── PLAYER ── */
+#pOv{position:fixed;inset:0;z-index:1000;display:flex;align-items:stretch;opacity:0;pointer-events:none;transition:opacity .4s ease;}
+#pOv.open{opacity:1;pointer-events:all;}
+.ov-bg{position:absolute;inset:0;background:rgba(12,7,3,.93);backdrop-filter:blur(10px);}
+.pw{position:relative;z-index:1;width:100%;display:flex;transform:translateY(40px);transition:transform .5s cubic-bezier(.16,1,.3,1);}
+#pOv.open .pw{transform:translateY(0);}
+.pm{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#080503;}
+.ptb{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.pcls{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;flex-shrink:0;color:rgba(244,236,216,.5);}
+.pcls:hover{border-color:rgba(244,236,216,.5);color:var(--cream);background:rgba(255,255,255,.06);}
+.pcls svg{width:14px;height:14px;stroke:currentColor;}
+.pttl{font-size:16px;font-weight:600;color:var(--cream);letter-spacing:.08em;}
+.pmta{font-size:9px;letter-spacing:.35em;color:rgba(244,236,216,.3);font-family:'Noto Sans SC',sans-serif;margin-top:3px;}
+.pscr{flex:1;position:relative;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.cc{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-start;}
+.cbg{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center;opacity:1;}
+.pnav{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:44px;height:44px;border-radius:50%;border:1px solid rgba(244,236,216,.18);background:rgba(10,7,3,.6);color:rgba(244,236,216,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;backdrop-filter:blur(4px);}
+.pnav:hover{border-color:rgba(244,236,216,.5);color:var(--cream);background:rgba(255,255,255,.08);}
+.pnav svg{width:16px;height:16px;stroke:currentColor;fill:none;}
+.pnav-prev{left:16px;}
+.pnav-next{right:16px;}
+
+.cct{position:relative;z-index:1;text-align:center;padding:32px 36px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:16px;width:100%;}
+.cey{font-size:9px;letter-spacing:.55em;color:rgba(244,236,216,.35);font-family:'Noto Sans SC',sans-serif;}
+.cttl{font-size:clamp(20px,3vw,38px);font-weight:700;color:var(--cream);letter-spacing:.05em;line-height:1.2;}
+.cdiv{display:none;}
+.cdsc{font-size:12px;color:rgba(244,236,216,.55);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.7;max-width:420px;letter-spacing:.04em;}
+.cbtn{display:inline-flex;align-items:center;gap:14px;padding:16px 40px;background:rgba(244,236,216,.08);border:1px solid rgba(244,236,216,.25);color:var(--cream);text-decoration:none;font-size:12px;letter-spacing:.4em;font-family:'Noto Sans SC',sans-serif;font-weight:300;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+.cbtn::before{content:'';position:absolute;inset:0;background:rgba(244,236,216,.06);transform:translateX(-100%);transition:transform .4s ease;}
+.cbtn:hover{border-color:rgba(244,236,216,.6);}
+.cbtn:hover::before{transform:translateX(0);}
+.cbtn svg{width:16px;height:16px;stroke:currentColor;}
+.cnil{font-size:11px;letter-spacing:.3em;color:rgba(244,236,216,.2);font-family:'Noto Sans SC',sans-serif;}
+.pdb{padding:14px 24px;border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.pdsc{font-size:12px;color:rgba(244,236,216,.4);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.7;}
+.psb{width:260px;flex-shrink:0;background:#0E0905;border-left:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;}
+.sbh{padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.sbhl{font-size:9px;letter-spacing:.5em;color:rgba(244,236,216,.2);font-family:'Noto Sans SC',sans-serif;}
+.sbs{flex:1;overflow-y:auto;}
+.sbs::-webkit-scrollbar{width:2px;}
+.sbs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);}
+.sbg{padding:12px 14px 4px;font-size:8px;letter-spacing:.45em;color:rgba(244,236,216,.18);font-family:'Noto Sans SC',sans-serif;border-top:1px solid rgba(255,255,255,.04);margin-top:4px;}
+.sbg:first-child{border-top:none;margin-top:0;}
+.sbi{display:flex;gap:10px;padding:10px 14px;cursor:pointer;transition:background .2s;border-left:2px solid transparent;align-items:flex-start;}
+.sbi:hover{background:rgba(255,255,255,.04);}
+.sbi.active{background:rgba(192,57,43,.12);border-left-color:var(--red);}
+.sbth{width:60px;height:40px;flex-shrink:0;border-radius:1px;overflow:hidden;}
+.sbti{width:100%;height:100%;background-size:cover;background-position:center;}
+.sbin{font-size:12px;color:rgba(244,236,216,.65);font-weight:600;letter-spacing:.05em;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbi.active .sbin{color:var(--cream);}
+
+
+/* ── DOC PLAYER (littlefire special layout) ── */
+.dp-wrap{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;}
+.dp-video{flex:0 0 42%;position:relative;background:#060402;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.07);}
+.dp-video-placeholder{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.dp-video-ring{width:64px;height:64px;border-radius:50%;border:1.5px solid rgba(244,236,216,.2);display:flex;align-items:center;justify-content:center;}
+.dp-video-ring svg{width:22px;height:22px;fill:rgba(244,236,216,.35);margin-left:4px;}
+.dp-video-label{font-size:10px;letter-spacing:.45em;color:rgba(244,236,216,.25);font-family:'Noto Sans SC',sans-serif;}
+.dp-doc{flex:1;overflow-y:auto;padding:40px 52px 60px;background:#0A0603;}
+.dp-doc::-webkit-scrollbar{width:3px;}
+.dp-doc::-webkit-scrollbar-thumb{background:rgba(200,146,42,.3);border-radius:2px;}
+.dp-doc-title{font-size:22px;font-weight:700;color:var(--cream);letter-spacing:.08em;margin-bottom:8px;}
+.dp-doc-subtitle{font-size:11px;letter-spacing:.4em;color:rgba(200,146,42,.6);font-family:'Noto Sans SC',sans-serif;margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.07);}
+.dp-section{margin-bottom:32px;}
+.dp-section-title{font-size:16px;font-weight:600;color:var(--gold);letter-spacing:.2em;font-family:'Noto Sans SC',sans-serif;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.dp-section-title::before{content:'';display:inline-block;width:20px;height:1px;background:var(--gold);}
+.dp-body{font-size:13px;color:rgba(244,236,216,.55);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:2;letter-spacing:.04em;}
+.dp-body p{margin-bottom:12px;}
+.dp-body strong{color:rgba(244,236,216,.8);font-weight:500;}
+.dp-step{padding:14px 18px;background:rgba(255,255,255,.03);border-left:2px solid rgba(200,146,42,.35);margin-bottom:8px;}
+.dp-step-num{font-size:9px;letter-spacing:.35em;color:var(--gold);font-family:'Noto Sans SC',sans-serif;margin-bottom:6px;opacity:.7;}
+.dp-step-text{font-size:12px;color:rgba(244,236,216,.5);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.8;}
+.dp-advantages{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:4px;}
+.dp-adv-item{padding:12px 16px;background:rgba(255,255,255,.025);font-size:11px;color:rgba(244,236,216,.45);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.7;display:flex;gap:10px;align-items:flex-start;}
+.dp-adv-num{color:var(--gold);font-size:10px;opacity:.6;flex-shrink:0;margin-top:1px;}
+.dp-tip{margin-top:20px;padding:18px 20px;background:rgba(200,146,42,.06);border:1px solid rgba(200,146,42,.15);}
+.dp-tip-label{font-size:9px;letter-spacing:.4em;color:var(--gold);font-family:'Noto Sans SC',sans-serif;margin-bottom:8px;opacity:.7;}
+.dp-tip-text{font-size:12px;color:rgba(244,236,216,.45);font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.8;}
+
+/* ── EXPERIENCE ── */
+#experience{background:var(--cream);}
+.exp-inner{padding:100px 10vw;}
+.timeline{position:relative;}
+.timeline::before{content:'';position:absolute;left:0;top:8px;bottom:0;width:1px;background:linear-gradient(to bottom,var(--red),rgba(192,57,43,0));}
+.ti{display:grid;grid-template-columns:200px 1fr;gap:48px;padding:40px 0 40px 40px;position:relative;border-bottom:1px solid rgba(107,66,38,.12);}
+.ti::before{content:'';position:absolute;left:-4px;top:48px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--cream);box-shadow:0 0 0 1px var(--red);}
+.tp{font-size:11px;color:var(--gold);letter-spacing:.2em;font-family:'Noto Sans SC',sans-serif;font-weight:300;line-height:1.8;padding-top:3px;}
+.tp .co{display:block;font-size:13px;color:var(--bl);margin-bottom:6px;letter-spacing:.05em;font-weight:400;}
+.tr{font-size:20px;font-weight:600;letter-spacing:.05em;margin-bottom:16px;line-height:1.3;}
+.td{font-size:13px;line-height:2;color:var(--inkl);font-weight:300;letter-spacing:.05em;font-family:'Noto Sans SC',sans-serif;}
+.td li{padding-left:16px;position:relative;list-style:none;margin-bottom:4px;}
+.td li::before{content:'—';position:absolute;left:0;color:var(--red);font-size:10px;top:2px;}
+
+/* ── CONTACT ── */
+#contact{background:var(--ink);overflow:hidden;}
+#contact .ci{padding:100px 10vw;position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;}
+#contact .sl{justify-content:center;color:rgba(244,236,216,.4);}
+#contact .sl::before{background:rgba(244,236,216,.3);}
+#contact .st{color:var(--cream);margin-bottom:24px;}
+.csub{font-size:15px;color:rgba(244,236,216,.5);font-weight:300;letter-spacing:.1em;margin-bottom:52px;font-family:'Noto Sans SC',sans-serif;line-height:2.2;}
+.cem{display:inline-block;font-size:clamp(18px,2.5vw,26px);color:var(--cream);text-decoration:none;border-bottom:1px solid rgba(244,236,216,.3);padding-bottom:8px;letter-spacing:.1em;font-weight:300;transition:border-color .3s,color .3s;font-family:'Noto Sans SC',sans-serif;}
+.cem:hover{color:var(--gold);border-color:var(--gold);}
+.cphone{display:block;margin-top:18px;font-size:clamp(16px,2.2vw,24px);color:rgba(244,236,216,.65);letter-spacing:.15em;font-family:'Noto Sans SC',sans-serif;font-weight:300;}
+.cphone-note{font-size:10px;letter-spacing:.3em;color:rgba(244,236,216,.25);font-family:'Noto Sans SC',sans-serif;margin-top:6px;display:block;}
+.cqr-wrap{margin-top:32px;display:inline-flex;flex-direction:column;align-items:center;gap:10px;}
+.cqr-img{width:180px;height:auto;border-radius:12px;opacity:.88;transition:opacity .3s;}
+.cqr-img:hover{opacity:1;}
+.cqr-label{font-size:9px;letter-spacing:.45em;color:rgba(244,236,216,.25);font-family:'Noto Sans SC',sans-serif;}
+.cdeco{position:absolute;font-size:300px;font-weight:700;color:transparent;-webkit-text-stroke:1px rgba(244,236,216,.04);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;white-space:nowrap;}
+.fn{margin-top:52px;font-size:11px;color:rgba(244,236,216,.2);letter-spacing:.3em;font-family:'Noto Sans SC',sans-serif;font-weight:300;}
+
+/* ── ANIMS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:900px){
+  nav{padding:20px 24px;} .nav-links{display:none;}
+  .ti{grid-template-columns:1fr;gap:12px;padding-left:28px;}
+  .hdeco{display:none;} .psb{display:none;}
+  .exp-inner,.works-hd{padding-left:6vw;padding-right:6vw;}
+}
+
+/* ── Real cover images ── */
+#spimg-xiurongzhen{background-image:url("");background-size:cover;background-position:center top;}
+#spimg-fantasygirl{background-image:url("");background-size:cover;background-position:center top;}
+#spimg-goodmorning{background-image:url("");background-size:cover;background-position:center top;}
+.cinema-cover-xiurongzhen{background-image:url("") !important;background-size:cover;background-position:center;}
+.cinema-cover-fantasygirl{background-image:url("") !important;background-size:cover;background-position:center;}
+.cinema-cover-goodmorning{background-image:url("") !important;background-size:cover;background-position:center;}
+</style>
+
+
+
+
+<style id="cover-overrides">
+:root{
+  --img-xiurongzhen: url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E4%BF%AE%E5%AE%B9%E9%95%87.jpg");
+  --img-cyberock: url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/cyberock.png");
+  --img-fantasygirl: url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/fantasygirl.jpg");
+  --img-goodmorning: url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/goodmorning.jpg");
+  --img-shishi: url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%8D%81%E5%8D%81.png");
+}
+#spimg-xiurongzhen{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E4%BF%AE%E5%AE%B9%E9%95%87.jpg") !important;background-size:cover !important;background-position:center !important;filter:none !important;}
+.cbg.g-xiur{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E4%BF%AE%E5%AE%B9%E9%95%87.jpg") !important;background-size:contain !important;background-position:center !important;}
+.sbti.g-xiur{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E4%BF%AE%E5%AE%B9%E9%95%87.jpg") !important;background-size:cover !important;background-position:center !important;}
+#spimg-cyberock{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/cyberock.png") !important;background-size:cover !important;background-position:center !important;filter:none !important;}
+.cbg.g-cyber{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/cyberock.png") !important;background-size:contain !important;background-position:center !important;}
+.sbti.g-cyber{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/cyberock.png") !important;background-size:cover !important;background-position:center !important;}
+#spimg-fantasygirl{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/fantasygirl.jpg") !important;background-size:cover !important;background-position:center !important;filter:none !important;}
+.cbg.g-fgirl{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/fantasygirl.jpg") !important;background-size:contain !important;background-position:center !important;}
+.sbti.g-fgirl{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/fantasygirl.jpg") !important;background-size:cover !important;background-position:center !important;}
+#spimg-goodmorning{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/goodmorning.jpg") !important;background-size:cover !important;background-position:center !important;filter:none !important;}
+.cbg.g-gmorning{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/goodmorning.jpg") !important;background-size:contain !important;background-position:center !important;}
+.sbti.g-gmorning{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/goodmorning.jpg") !important;background-size:cover !important;background-position:center !important;}
+#spimg-shishi{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%8D%81%E5%8D%81.png") !important;background-size:cover !important;background-position:center !important;filter:none !important;}
+.cbg.g-shishi{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%8D%81%E5%8D%81.png") !important;background-size:contain !important;background-position:center !important;}
+.sbti.g-shishi{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%8D%81%E5%8D%81.png") !important;background-size:cover !important;background-position:center !important;}
+#spimg-bniuer{background-image:url("https://raw.githubusercontent.com/southyang99-ux/biniu/main/001.jpg") !important;background-size:cover !important;background-position:center !important;filter:none !important;}
+.cbg.g-bniuer{background-image:url("https://raw.githubusercontent.com/southyang99-ux/biniu/main/001.jpg") !important;background-size:contain !important;background-position:center !important;}
+.sbti.g-bniuer{background-image:url("https://raw.githubusercontent.com/southyang99-ux/biniu/main/001.jpg") !important;background-size:cover !important;background-position:center !important;}
+.sbti.g-gala{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF01%E4%BA%95.png") !important;background-size:cover !important;background-position:center !important;}
+.sbti.g-dev{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%8A%96%E6%8A%96%E9%BB%98%E8%AE%A4%E5%9B%BE.png") !important;background-size:cover !important;background-position:center !important;}
+.cbg.g-lf{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/littlefireA-01.png") !important;background-size:contain !important;background-repeat:no-repeat !important;background-position:center !important;}
+.sbti.g-lf{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/littlefire%E9%BB%98%E8%AE%A4%E5%9B%BE.png") !important;background-size:cover !important;background-position:center !important;}
+#spimg-grow{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/grow.jpg") !important;background-size:cover !important;background-position:center !important;}
+.cbg.g-grow{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/grow.jpg") !important;background-size:contain !important;background-repeat:no-repeat !important;background-position:center !important;}
+.sbti.g-grow{background-image:url("https://raw.githubusercontent.com/southyang99-ux/southresume/main/grow.jpg") !important;background-size:cover !important;background-position:center !important;}
+</style>
+
+</head>
+<body>
+
+<canvas id="leaf-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- PLAYER -->
+<div id="pOv">
+  <div class="ov-bg" id="ovBg"></div>
+  <div class="pw">
+    <div class="pm">
+      <div class="ptb">
+        <button class="pcls" id="pCls"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button>
+        <div><div class="pttl" id="pTtl"></div><div class="pmta" id="pMta"></div></div>
+      </div>
+      <div class="pscr" id="pScr"></div>
+      <div class="pdb"><div class="pdsc" id="pDsc"></div></div>
+    </div>
+    <div class="psb">
+      <div class="sbh"><div class="sbhl">全部作品</div></div>
+      <div class="sbs" id="sbScr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">杨南方</div>
+  <ul class="nav-links">
+    <li><a href="#works">作品</a></li>
+    <li><a href="#experience">经历</a></li>
+    <li><a href="#contact">联系</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hdeco">South</div>
+  <div class="ey">ANIMATION DIRECTOR · CG · POST-PRODUCTION</div>
+  <h1 class="hn">杨<span class="r">南</span>方</h1>
+  <div class="hsub">
+    <span class="hsub-l1">Love animation.</span>
+    <span class="hsub-l2">More than animation.</span>
+  </div>
+  <div class="htags">
+    <span class="htag">个人创作</span><span class="hdot">·</span>
+    <span class="htag">团队管理</span><span class="hdot">·</span>
+    <span class="htag">导演</span><span class="hdot">·</span>
+    <span class="htag">CG 动画</span><span class="hdot">·</span>
+    <span class="htag">二维动画</span><span class="hdot">·</span>
+    <span class="htag">后期合成</span>
+  </div>
+  <div class="hscr"><div class="sline"></div><span>向下探索</span></div>
+</section>
+
+<!-- WORKS -->
+<section id="works">
+  <div class="works-hd">
+    <div class="sl fiu">WORKS</div>
+    <h2 class="st fiu">作品</h2>
+    <div class="shelf-legend fiu">
+      <div class="leg"><div class="leg-dot" style="background:var(--red)"></div><span>参与项目</span></div>
+      <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div><span>个人作品</span></div>
+      <div class="leg"><div class="leg-dot" style="background:var(--sage)"></div><span>开发 / 其他</span></div>
+    </div>
+  </div>
+
+  <!-- ROW 1: 参与项目 + 个人作品 -->
+  <div class="shelf-section fiu" id="shelfOuter1">
+    <!-- Floating category labels — positioned by JS -->
+    <div class="cat-group-label" id="lbl-company">
+      <div class="cat-group-label-inner">
+        <div class="cat-group-label-dot" style="background:var(--red)"></div>
+        参与项目
+      </div>
+    </div>
+    <div class="cat-group-label" id="lbl-personal">
+      <div class="cat-group-label-inner">
+        <div class="cat-group-label-dot" style="background:var(--gold)"></div>
+        个人作品
+      </div>
+    </div>
+    <div class="spine-row" id="spineRow1">
+
+      <!-- 参与项目 -->
+      <button class="spine-card" data-id="xiurongzhen" data-row="1" style="--cc:var(--red)">
+        <div class="sp-award">✦ 昂西优秀处女作<br>✦ FIRST最佳短片</div>
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-xiur" id="spimg-xiurongzhen" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E4%BF%AE%E5%AE%B9%E9%95%87.jpg');background-size:cover;background-position:center;"><div class="shimmer"></div></div>
+          
+          <div class="sp-hint" style="align-items:flex-end;padding-bottom:98px;"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《修容镇》</span></div>
+          <div class="sp-exp"><div class="sp-em">2016 — 2020</div><div class="sp-et">《修容镇》</div></div>
+        </div>
+      </button>
+
+      <button class="spine-card" data-id="cyberock" data-row="1" style="--cc:var(--red)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-cyber" id="spimg-cyberock" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/cyberock.png');background-size:cover;background-position:center;"><div class="shimmer"></div></div>
+          
+          <div class="sp-hint"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《Cyberock》</span></div>
+          <div class="sp-exp"><div class="sp-em">2019 — 2020</div><div class="sp-et">《Cyberock》</div></div>
+        </div>
+      </button>
+
+      <button class="spine-card" data-id="fantasygirl" data-row="1" style="--cc:var(--red)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-fgirl" id="spimg-fantasygirl" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/fantasygirl.jpg');background-size:cover;background-position:center;"></div>
+          
+          <div class="sp-hint"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《FantasyGirl》</span></div>
+          <div class="sp-exp"><div class="sp-em">2017</div><div class="sp-et">《FantasyGirl》</div></div>
+        </div>
+      </button>
+
+      <button class="spine-card" data-id="goodmorning" data-row="1" style="--cc:var(--red)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-gmorning" id="spimg-goodmorning" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/goodmorning.jpg');background-size:cover;background-position:center;"></div>
+          
+          <div class="sp-hint"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《GoodMorning》</span></div>
+          <div class="sp-exp"><div class="sp-em">2015 — 2016</div><div class="sp-et">《GoodMorning》</div></div>
+        </div>
+      </button>
+
+      <div class="cat-div" data-lbl="个人作品"></div>
+
+      <!-- 个人作品 -->
+      <button class="spine-card" data-id="shishi" data-row="1" style="--cc:var(--gold)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-shishi" id="spimg-shishi" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%8D%81%E5%8D%81.png');background-size:cover;background-position:center;"><div class="shimmer"></div></div>
+          
+          <div class="sp-hint" style="align-items:flex-start;padding-top:105px;"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《十.十》</span></div>
+          <div class="sp-exp"><div class="sp-em">个人创作</div><div class="sp-et">《十.十》</div></div>
+        </div>
+      </button>
+
+      <button class="spine-card" data-id="bniuer" data-row="1" style="--cc:var(--gold)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-bniuer" id="spimg-bniuer" style="background-image:url('');background-size:cover;background-position:center;"></div>
+          
+          <div class="sp-hint"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《鼻牛儿》</span></div>
+          <div class="sp-exp"><div class="sp-em">个人创作</div><div class="sp-et">《鼻牛儿》</div></div>
+        </div>
+      </button>
+
+      <button class="spine-card" data-id="gala" data-row="1" style="--cc:var(--gold)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-gala" id="spimg-gala" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF01%E4%BA%95.png');background-size:cover;background-position:center;"></div>
+          
+          <div class="sp-hint"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《旮旯》</span></div>
+          <div class="sp-exp"><div class="sp-em">个人创作</div><div class="sp-et">《旮旯》</div></div>
+        </div>
+      </button>
+
+      <button class="spine-card" data-id="grow" data-row="1" style="--cc:var(--gold)">
+        <div class="sp-accent"></div>
+          <div class="spine-inner">
+          <div class="sp-img g-grow" id="spimg-grow" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/grow.jpg');background-size:cover;background-position:center;"></div>
+          
+          <div class="sp-hint"><div class="sp-ring"><svg viewBox="0 0 16 16"><polygon points="4,2 14,8 4,14"/></svg></div></div>
+          <div class="sp-vtitle"><span class="sp-vt">《Grow》</span></div>
+          <div class="sp-exp"><div class="sp-em">个人创作</div><div class="sp-et">《Grow》</div></div>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ROW 2: 开发其他 -->
+  <div class="dev-section fiu">
+    <div class="dev-hd">
+      <div style="width:9px;height:9px;border-radius:50%;background:var(--sage);flex-shrink:0;"></div>
+      <span class="dev-hd-title">开发其他</span>
+    </div>
+    <div class="dev-cards">
+
+      <button class="dev-card" data-id="douline">
+        <div class="dev-card-bg g-dev" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%8A%96%E6%8A%96%E9%BB%98%E8%AE%A4%E5%9B%BE.png');background-size:cover;background-position:center;"></div>
+        <div class="dev-card-accent"></div>
+        <div class="dev-card-inner">
+          <div class="dev-card-tag">开发中 · DEMO 阶段</div>
+          <div class="dev-card-meta">2023 — 至今 · 独立开发</div>
+          <div class="dev-card-title">抖抖线</div>
+          <div class="dev-card-desc">模拟儿童画不稳线条的动画抖动形态，通过量化线的属性参数，可控营造不同质感与情绪的线条表现。</div>
+          <a class="dev-card-link" href="#" onclick="openPlayer('douline');return false;">了解更多 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </button>
+
+      <button class="dev-card" data-id="littlefire">
+        <div class="dev-card-bg g-lf" style="background-image:url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/littlefire%E9%BB%98%E8%AE%A4%E5%9B%BE.png');background-size:cover;background-position:center;"></div>
+        <div class="dev-card-accent"></div>
+        <div class="dev-card-inner">
+          <div class="dev-card-tag">理念方法论</div>
+          <div class="dev-card-meta">2019 — 2020 · 狐光动画</div>
+          <div class="dev-card-title">littlefire 项目</div>
+          <div class="dev-card-desc">以短平快的人员时间分配与环节配合，在最短时间内完成动画片段——旨在提升创意开发、效果测试、人员磨合与快速迭代能力。作品补充中。</div>
+          <a class="dev-card-link" href="#" onclick="openPlayer('littlefire');return false;">了解更多 <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+</section>
+
+<!-- EXPERIENCE -->
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="exp-inner">
+    <div class="sl">EXPERIENCE</div>
+    <h2 class="st">工作经历</h2>
+    <div class="timeline">
+      <div class="ti">
+        <div class="tp"><span class="co">独立创作 / 自媒体</span>2021 — 至今</div>
+        <div><div class="tr">个人创作 · 自媒体 · 独立开发</div><ul class="td">
+          <li>个人动画短片创作，探索个人叙事与视觉风格</li>
+          <li>自媒体内容创作与运营</li>
+          <li>独立开发抖抖线动画软件（模拟手绘抖动线条），目前 Demo 阶段</li>
+        </ul></div>
+      </div>
+      <div class="ti">
+        <div class="tp"><span class="co">苏州奥拉</span>2020.10 — 2020.12</div>
+        <div><div class="tr">导演 · 后期特效</div><ul class="td">
+          <li>担任动画导演与后期特效主管，参与项目创作开发</li>
+        </ul></div>
+      </div>
+      <div class="ti">
+        <div class="tp"><span class="co">深圳狐光动画</span>2016.03 — 2020.07</div>
+        <div><div class="tr">CG 主管 · 后期主管 · 导演</div><ul class="td">
+          <li>负责 CG 与后期各环节交接及整体品质把控</li>
+          <li>梳理 CG 与后期对接工作流程，制定制作标准规范；制定团队发展计划与项目开发方向</li>
+          <li>完成《修容镇》（昂西优秀处女作 · FIRST 最佳短片）《Cyberock》《FantasyGirl》《GoodMorning》等多部原创动画短片</li>
+          <li>主导《drift》项目开发，并建立 littlefire 快速迭代创作模式</li>
+        </ul></div>
+      </div>
+      <div class="ti">
+        <div class="tp"><span class="co">深圳冰川网络</span>2016.01 — 2016.02</div>
+        <div><div class="tr">游戏宣传视频设计</div><ul class="td">
+          <li>根据策划方案制作游戏宣传视频，与宣发团队沟通确定定位与调性</li>
+        </ul></div>
+      </div>
+      <div class="ti">
+        <div class="tp"><span class="co">广州一势原承</span>2015.03 — 2015.11</div>
+        <div><div class="tr">广告视频策划制作</div><ul class="td">
+          <li>视频剪辑、后期合成与包装</li>
+          <li>三维设计制作（模型、特效、渲染）及创意脚本策划</li>
+        </ul></div>
+      </div>
+      <div class="ti">
+        <div class="tp"><span class="co">北京登塔烽火</span>2013.08 — 2014.09</div>
+        <div><div class="tr">3D 场景 / 特效 · 创业合作</div><ul class="td">
+          <li>制作 CCTV-5 NBA 常规赛与季后赛动画宣传片</li>
+          <li>合作创立工作室，积累初创团队与制作经验</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="ci">
+    <div class="cdeco">联</div>
+    <div class="sl">CONTACT</div>
+    <h2 class="st">And more.</h2>
+    <p class="csub">期待与彼岸天共同创作兼具美学价值与世界影响力的作品。</p>
+    <a class="cem" href="mailto:southyang99@gmail.com">southyang99@gmail.com</a>
+    <span class="cphone">158 1331 2463</span>
+    <span class="cphone-note">微信同号</span>
+    <div class="cqr-wrap" style="margin-top:32px;">
+      <div style="position:relative;width:180px;height:180px;display:inline-block;">
+        <img class="cqr-img" src="https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%BE%AE%E4%BF%A1%E8%81%94%E7%B3%BB.jpg" alt="微信二维码" style="width:180px;height:180px;filter:sepia(1) saturate(3) hue-rotate(330deg) brightness(0.65);" />
+        <img src="https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%BE%AE%E4%BF%A1%E5%A4%B4%E5%83%8F.jpg" alt="微信头像" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:6px;object-fit:cover;border:2px solid rgba(244,236,216,.4);" />
+      </div>
+      <span class="cqr-label">扫码添加微信</span>
+    </div>
+    <div class="fn">杨南方 · 动画创作者 · 2026</div>
+  </div>
+</section>
+
+
+<script>
+const WORKS=[
+  {id:'xiurongzhen',group:'参与项目',gf:'g-xiur',title:'《修容镇》',meta:'2016—2020 · 狐光动画 · CG 组长 · 后期组长',desc:'第 44 届昂西动画节「优秀动画处女作」奖 / 第 14 届 FIRST 青年电影展「最佳短片」奖。主导后期与 CG 全流程，制定制作规范并把控整体品质。',url:'https://www.bilibili.com/video/BV1HV411a7UC/',bvid:'BV1HV411a7UC'},
+  {id:'cyberock',group:'参与项目',gf:'g-cyber',title:'《Cyberock》',meta:'2019—2020 · 狐光动画 · 导演 · 剧本 · 后期',desc:'探索三维与二维融合制作方式。短期内完成全流程磨合，负责创意构建、制作管理及全部后期工作。',url:'https://www.bilibili.com/video/BV1ne41147FM/',bvid:'BV1ne41147FM'},
+  {id:'fantasygirl',group:'参与项目',gf:'g-fgirl',title:'《FantasyGirl》',meta:'2017 · 狐光动画 · 后期组长',desc:'原创动画短片，团队过渡项目，梳理后期制作规范，夯实工作流程基础。',url:'https://www.acfun.cn/v/ac19772989',bvid:null},
+  {id:'goodmorning',group:'参与项目',gf:'g-gmorning',title:'《GoodMorning》',meta:'2015—2016 · 狐光动画 · 特效 · 后期',desc:'狐光动画第一部原创作品，旨在磨合团队。担任大部分特效和后期制作，从零建立团队协作机制。',url:'https://www.acfun.cn/v/ac19773096',bvid:null},
+  {id:'shishi',group:'个人作品',gf:'g-shishi',title:'《十.十》',meta:'个人创作 · B 站',desc:'个人动画作品。',url:'https://www.bilibili.com/video/BV1654y1F7Dv/',bvid:'BV1654y1F7Dv'},
+  {id:'bniuer',group:'个人作品',gf:'g-bniuer',title:'《鼻牛儿》',meta:'个人创作',desc:'个人动画作品，链接补充中。',url:null,bvid:null},
+  {id:'gala',group:'个人作品',gf:'g-gala',title:'《旮旯》',meta:'个人创作 · B 站',desc:'个人动画作品。共三部。',url:'https://www.bilibili.com/video/BV1uh411h75N/',bvid:'BV1uh411h75N'},
+  {id:'grow',group:'个人作品',gf:'g-grow',title:'《Grow》',meta:'个人创作 · B 站',desc:'个人动画作品。',url:'https://www.bilibili.com/video/BV1WoQwBCEWT/',bvid:'BV1WoQwBCEWT'},
+  {id:'douline',group:'开发其他',gf:'g-dev',img:'https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%8A%96%E6%8A%96.png',title:'抖抖线',meta:'2023—至今 · 独立开发 · Demo 阶段',desc:'模拟儿童画不稳线条的动画抖动形态。通过量化线的属性参数，可控地营造出不同质感与情绪的线条表现。',url:'https://southyang99-ux.github.io/southresume/DouDouAnimation.html',bvid:null},
+  {id:'littlefire',group:'开发其他',gf:'g-lf',title:'littlefire 项目',meta:'2019—2020 · 狐光动画',desc:'以短平快的人员时间分配与环节配合，在最短时间内完成一段动画片段，旨在提升创意开发、效果测试、人员磨合与快速迭代能力。',url:null,bvid:null}
+];
+
+const coverCache={};
+function loadCover(bvid,targetId){
+  if(!bvid)return;
+  const cb='bc_'+bvid;
+  const s=document.createElement('script');
+  s.src=`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}&callback=${cb}`;
+  s.onerror=()=>{delete window[cb];s.remove();};
+  window[cb]=d=>{
+    try{const pic=d?.data?.pic?.replace('http://','https://');if(pic){coverCache[bvid]=pic;applyCover(targetId,bvid,pic);}}catch(e){}
+    delete window[cb];s.remove();
+  };
+  setTimeout(()=>{if(window[cb]){delete window[cb];s.remove();}},4000);
+  document.head.appendChild(s);
+}
+function applyCover(targetId,bvid,url){
+  const el=document.getElementById('spimg-'+targetId);
+  if(el){el.querySelector('.shimmer')?.remove();el.style.backgroundImage=`url('${url}')`;el.classList.add('loaded');}
+  document.querySelectorAll(`.sbti[data-bvid="${bvid}"]`).forEach(t=>{t.style.backgroundImage=`url('${url}')`;});
+}
+
+/* ── LITTLEFIRE DOC RENDERER ── */
+const BNIUER_PAGES = [
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/001.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/002.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/003.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/004.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/005.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/006.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/007.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/008.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/009.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/010.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/011.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/012.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/013.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/014.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/015.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/016.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/017.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/018.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/019.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/020.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/021.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/022.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/023.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/024.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/025.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/026.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/027.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/028.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/029.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/030.jpg",
+  "https://raw.githubusercontent.com/southyang99-ux/biniu/main/031.jpg"
+];
+
+function renderBniuer(){
+  return '<div id="bnWrap" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111008;overflow:hidden;">'
+    +'<audio id="bnAudio" src="https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E9%BC%BB%E7%89%9B%E7%BB%98%E6%9C%AC%E9%9F%B3%E9%A2%91.mp3" loop preload="auto"></audio>'
+    +'<div id="bnProgress" style="position:absolute;top:0;left:0;right:0;height:2px;background:rgba(255,255,255,.06);z-index:20;"><div id="bnBar" style="height:100%;background:#C8922A;width:0%;transition:width .5s;"></div></div>'
+    +'<div id="bnStage" style="flex:1;width:100%;display:flex;align-items:center;justify-content:center;perspective:2000px;overflow:visible;">'
+      +'<div id="bnBook" style="position:relative;transform-style:preserve-3d;cursor:pointer;filter:none;"></div>'
+    +'</div>'
+    +'<div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:22px;z-index:20;">'
+      +'<button onclick="bnGo(-1)" id="bnPrev" style="width:42px;height:42px;border-radius:50%;border:1px solid rgba(244,236,216,.22);background:rgba(10,7,2,.8);color:rgba(244,236,216,.7);font-size:22px;cursor:pointer;outline:none;line-height:1;">&#8249;</button>'
+      +'<span id="bnLabel" style="font-size:11px;letter-spacing:.35em;color:rgba(244,236,216,.4);font-family:Noto Sans SC,sans-serif;min-width:100px;text-align:center;"></span>'
+      +'<button onclick="bnGo(1)"  id="bnNext" style="width:42px;height:42px;border-radius:50%;border:1px solid rgba(244,236,216,.22);background:rgba(10,7,2,.8);color:rgba(244,236,216,.7);font-size:22px;cursor:pointer;outline:none;line-height:1;">&#8250;</button>'
+    +'</div>'
+    +'<div id="bnAudioBtn" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:12px;z-index:20;">'
+      +'<button onclick="(function(){var a=document.getElementById(\'bnAudio\');var b=document.getElementById(\'bnAudioPause\');if(a.paused){a.play();b.textContent=\'⏸\';}else{a.pause();b.textContent=\'▶\';}})()" id="bnAudioPause" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(244,236,216,.2);background:rgba(10,7,2,.8);color:rgba(244,236,216,.5);font-size:13px;cursor:pointer;outline:none;">⏸</button>'
+      +'<button onclick="(function(){var a=document.getElementById(\'bnAudio\');a.pause();a.currentTime=0;document.getElementById(\'bnAudioPause\').textContent=\'▶\';})()" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(244,236,216,.2);background:rgba(10,7,2,.8);color:rgba(244,236,216,.5);font-size:13px;cursor:pointer;outline:none;">■</button>'
+      +'<button onclick="(function(){var a=document.getElementById(\'bnAudio\');a.currentTime=0;a.play();document.getElementById(\'bnAudioPause\').textContent=\'⏸\';})()" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(244,236,216,.2);background:rgba(10,7,2,.8);color:rgba(244,236,216,.5);font-size:13px;cursor:pointer;outline:none;">↺</button>'
+    +'</div>'
+    +'<div id="bnHint" style="position:absolute;top:12px;right:16px;font-size:8px;letter-spacing:.3em;color:rgba(244,236,216,.18);font-family:Noto Sans SC,sans-serif;pointer-events:none;">← → 翻页</div>'
+    +'</div>';
+}
+
+function initBniuer(){
+  var wrap=document.getElementById('bnWrap');
+  if(!wrap||typeof BNIUER_PAGES==='undefined')return;
+  var IMGS=BNIUER_PAGES, NPAGES=IMGS.length;
+  var book=document.getElementById('bnBook');
+  var stage=document.getElementById('bnStage');
+  var sw=stage.offsetWidth, sh=stage.offsetHeight-60;
+  var sz=Math.min(Math.floor(sw*0.44), Math.floor(sh*0.88), 460);
+
+  book.style.cssText='position:relative;transform-style:preserve-3d;cursor:pointer;'
+    +'width:'+(2*sz)+'px;height:'+sz+'px;';
+
+  var NSPREADS=1+Math.ceil(NPAGES/2);
+  function getSpread(s){
+    if(s===0)return{left:null,right:IMGS[0]};
+    return{left:IMGS[2*s-2]||null,right:IMGS[2*s-1]||null};
+  }
+
+  /* Preload all images into cache */
+  var cache={};
+  IMGS.forEach(function(src){
+    var img=new Image(); img.src=src; cache[src]=img;
+  });
+
+  function mk(css){var d=document.createElement('div');d.style.cssText=css;return d;}
+
+  /* Set background-image on panel */
+  function setImg(el,src){
+    el.style.backgroundImage=src?"url('"+src+"')":'none';
+    el.style.backgroundSize='cover';
+    el.style.backgroundPosition='center';
+  }
+
+  var leftEl=mk('position:absolute;left:0;top:0;width:'+sz+'px;height:'+sz+'px;background:#0A0703;');
+  var rightEl=mk('position:absolute;left:'+sz+'px;top:0;width:'+sz+'px;height:'+sz+'px;background:#0A0703;');
+
+  /* Cover title overlay — only visible on cover */
+  var covOv=document.createElement('div');
+  covOv.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;'
+    +'align-items:center;justify-content:flex-end;padding-bottom:10%;z-index:5;'
+    +'pointer-events:none;backface-visibility:hidden;-webkit-backface-visibility:hidden;';
+  covOv.innerHTML='<div style="font-size:clamp(20px,4vw,46px);font-weight:700;color:#F4ECD8;'
+    +'letter-spacing:.25em;text-shadow:0 2px 20px rgba(0,0,0,.95);">鼻牛儿</div>'
+    +'<div style="margin-top:8px;font-size:clamp(7px,1vw,10px);letter-spacing:.65em;'
+    +'color:rgba(244,236,216,.5);">PICTURE BOOK</div>';
+  rightEl.appendChild(covOv);
+
+  var leafEl=mk('position:absolute;top:0;left:'+sz+'px;width:'+sz+'px;height:'+sz+'px;'
+    +'transform-style:preserve-3d;transform-origin:left center;transform:rotateY(0deg);z-index:20;pointer-events:none;display:none;');
+  var lfFront=mk('position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#0A0703;');
+  var lfBack =mk('position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#0A0703;transform:rotateY(180deg);');
+  leafEl.appendChild(lfFront); leafEl.appendChild(lfBack);
+
+  book.innerHTML='';
+  book.appendChild(leftEl); book.appendChild(rightEl); book.appendChild(leafEl);
+
+  var cur=0, busy=false;
+
+  function bookPos(s,animate){
+    book.style.transition=animate?'transform .52s cubic-bezier(.16,1,.3,1)':'none';
+    var spread=getSpread(s);
+    if(s===0){
+      // cover: only right page, center it
+      leftEl.style.display='none';
+      rightEl.style.display='block';
+      book.style.transform='translateX(-'+Math.round(sz/2)+'px)';
+    } else if(!spread.right){
+      // last odd page: only left page, center it
+      leftEl.style.display='block';
+      rightEl.style.display='none';
+      book.style.transform='translateX('+Math.round(sz/2)+'px)';
+    } else {
+      leftEl.style.display='block';
+      rightEl.style.display='block';
+      book.style.transform='translateX(0)';
+    }
+  }
+
+  function ui(){
+    var bar=document.getElementById('bnBar'),lbl=document.getElementById('bnLabel'),
+        pv=document.getElementById('bnPrev'),nx=document.getElementById('bnNext');
+    if(!bar)return;
+    bar.style.width=(NSPREADS>1?cur/(NSPREADS-1)*100:0)+'%';
+    lbl.textContent=cur===0?'封面':('第 '+(2*cur-1)+'—'+Math.min(2*cur,NPAGES)+' 页');
+    pv.style.opacity=cur===0?'.25':'1'; pv.style.pointerEvents=cur===0?'none':'auto';
+    nx.style.opacity=cur>=NSPREADS-1?'.25':'1'; nx.style.pointerEvents=cur>=NSPREADS-1?'none':'auto';
+  }
+
+  window.bnGo=function(dir){
+    if(busy)return;
+    var t=cur+dir; if(t<0||t>=NSPREADS)return;
+    busy=true;
+    var from=getSpread(cur), to=getSpread(t);
+    leafEl.style.transition='none';
+
+    /* ── CASE 1: Cover → first spread ── */
+    if(cur===0 && dir>0){
+      setImg(rightEl, to.right);
+      setImg(lfFront, from.right);
+      setImg(lfBack,  to.left);
+      lfFront.appendChild(covOv);       // 字跟着封面正面翻走
+      leafEl.style.transform='rotateY(0deg)';
+      leafEl.style.display='block';
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        book.style.transition='transform .72s cubic-bezier(.16,1,.3,1)';
+        book.style.transform='translateX(0)';
+        leafEl.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';
+        leafEl.style.transform='rotateY(-180deg)';
+        setTimeout(function(){
+          // halfway — leaf is edge-on, safe to remove covOv
+          if(covOv.parentNode) covOv.parentNode.removeChild(covOv);
+        },360);
+        setTimeout(function(){
+          setImg(leftEl, to.left);
+          leftEl.style.display='block';
+          cur=t;
+          leafEl.style.display='none'; leafEl.style.transition='none'; leafEl.style.transform='rotateY(0deg)';
+          // Auto-play audio on first page open
+          var audio=document.getElementById('bnAudio');
+          var btn=document.getElementById('bnAudioBtn');
+          if(audio&&btn){
+            audio.play().catch(function(){});
+            btn.style.display='flex';
+          }
+          ui(); busy=false;
+        },780);
+      });});
+
+    /* ── CASE 1 reverse: first spread → cover ── */
+    } else if(t===0 && dir<0){
+      setImg(lfFront, to.right);
+      if(covOv.parentNode) covOv.parentNode.removeChild(covOv); // 先移出
+      setImg(lfBack,  from.left);
+      leftEl.style.display='none';
+      leafEl.style.transform='rotateY(-180deg)';
+      leafEl.style.display='block';
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        book.style.transition='transform .72s cubic-bezier(.16,1,.3,1)';
+        book.style.transform='translateX(-'+Math.round(sz/2)+'px)';
+        leafEl.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';
+        leafEl.style.transform='rotateY(0deg)';
+        setTimeout(function(){
+          lfFront.appendChild(covOv); // 叶片转过90°侧面后，封面侧开始朝向观众，加入文字
+        },360);
+        setTimeout(function(){
+          setImg(rightEl, to.right);
+          rightEl.appendChild(covOv);
+          leftEl.style.display='none';
+          cur=t;
+          leafEl.style.display='none'; leafEl.style.transition='none'; leafEl.style.transform='rotateY(0deg)';
+          ui(); busy=false;
+        },780);
+      });});
+
+    /* ── CASE 2: Normal spread → spread ── */
+    } else if(dir>0 && to.right){
+      setImg(leftEl,  from.left);
+      setImg(rightEl, to.right);
+      setImg(lfFront, from.right);
+      setImg(lfBack,  to.left);
+      leafEl.style.transform='rotateY(0deg)';
+      leafEl.style.display='block';
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        leafEl.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';
+        leafEl.style.transform='rotateY(-180deg)';
+        setTimeout(function(){
+          setImg(leftEl, to.left); setImg(rightEl, to.right);
+          cur=t; bookPos(t,true);
+          leafEl.style.display='none'; leafEl.style.transition='none'; leafEl.style.transform='rotateY(0deg)';
+          ui(); busy=false;
+        },780);
+      });});
+
+    /* ── CASE 3: To last odd page (no right page) ── */
+    } else if(dir>0 && !to.right){
+      setImg(lfFront, from.right);
+      setImg(lfBack,  to.left);
+      leafEl.style.transform='rotateY(0deg)';
+      leafEl.style.display='block';
+      rightEl.style.display='none';     // leaf covers rightEl at 0deg — safe to hide now
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        book.style.transition='transform .72s cubic-bezier(.16,1,.3,1)';
+        book.style.transform='translateX('+Math.round(sz/2)+'px)';
+        leafEl.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';
+        leafEl.style.transform='rotateY(-180deg)';
+        setTimeout(function(){
+          // Leaf has landed on left — now swap leftEl content and hide right
+          setImg(leftEl, to.left);
+          rightEl.style.display='none';
+          cur=t;
+          leafEl.style.display='none'; leafEl.style.transition='none'; leafEl.style.transform='rotateY(0deg)';
+          ui(); busy=false;
+        },780);
+      });});
+
+    /* ── CASE 3 reverse: From last odd page ── */
+    } else if(dir<0 && !from.right){
+      setImg(lfFront, to.right);
+      setImg(lfBack,  from.left);
+      // Leaf at -180deg covers leftEl entirely — set destination image underneath now
+      leafEl.style.transform='rotateY(-180deg)';
+      leafEl.style.display='block';
+      setImg(leftEl, to.left);          // hidden under leaf, safe to set now
+      rightEl.style.display='none';     // keep hidden until leaf lands
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        book.style.transition='transform .72s cubic-bezier(.16,1,.3,1)';
+        book.style.transform='translateX(0)';
+        leafEl.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';
+        leafEl.style.transform='rotateY(0deg)';
+        setTimeout(function(){
+          setImg(rightEl, to.right);
+          rightEl.style.display='block';
+          cur=t;
+          leafEl.style.display='none'; leafEl.style.transition='none'; leafEl.style.transform='rotateY(0deg)';
+          ui(); busy=false;
+        },780);
+      });});
+
+    } else {
+      /* dir<0, normal spread → spread backward */
+      setImg(leftEl,  to.left);         // destination left already waiting
+      setImg(rightEl, from.right);      // current right stays visible
+      setImg(lfFront, to.right);        // leaf front = destination right (matches at end)
+      setImg(lfBack,  from.left);       // leaf back = current left page flipping back
+      leafEl.style.transform='rotateY(-180deg)';
+      leafEl.style.display='block';
+      requestAnimationFrame(function(){requestAnimationFrame(function(){
+        leafEl.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';
+        leafEl.style.transform='rotateY(0deg)';
+        setTimeout(function(){
+          setImg(leftEl, to.left); setImg(rightEl, to.right);
+          cur=t; bookPos(t,true);
+          leafEl.style.display='none'; leafEl.style.transition='none'; leafEl.style.transform='rotateY(0deg)';
+          ui(); busy=false;
+        },780);
+      });});
+    }
+  };
+
+  book.addEventListener('click',function(e){
+    if(busy)return;
+    var r=book.getBoundingClientRect(),x=e.clientX-r.left;
+    if(cur===0){bnGo(1);}
+    else{if(x>r.width*.55)bnGo(1); else if(x<r.width*.45)bnGo(-1);}
+  });
+
+  window._bnKey=function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')bnGo(1);
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp')bnGo(-1);
+  };
+  document.addEventListener('keydown',window._bnKey);
+  setTimeout(function(){var h=document.getElementById('bnHint');if(h)h.style.opacity='0';},4000);
+
+  setImg(leftEl,''); setImg(rightEl,IMGS[0]);
+  bookPos(0,false); ui();
+}
+
+
+
+function renderGala(){
+  var videos=[
+    {bvid:'BV1uh411h75N',title:'旮旯 · 一',url:'https://www.bilibili.com/video/BV1uh411h75N/'},
+    {bvid:'BV1nhDeBoEio',title:'旮旯 · 二',url:'https://www.bilibili.com/video/BV1nhDeBoEio/'},
+    {bvid:'BV1T44y1q7So',title:'旮旯 · 三',url:'https://www.bilibili.com/video/BV1T44y1q7So/'},
+    {bvid:'BV1i3D7BiEFX',title:'旮旯 · 四',url:'https://www.bilibili.com/video/BV1i3D7BiEFX/'},
+    {bvid:'BV13w411Z7wR',title:'旮旯 · 五',url:'https://www.bilibili.com/video/BV13w411Z7wR/'}
+  ];
+  var cards=videos.map(function(v,i){
+    return '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:0;border-radius:4px;overflow:hidden;background:#0A0603;">'
+      +'<div id="gala-thumb-'+i+'" class="g-gala" style="flex:1;min-height:0;position:relative;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;">'
+        +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(5,2,1,.75) 0%,transparent 50%);"></div>'
+        +'<div style="position:relative;z-index:1;">'
+          +'<a href="'+v.url+'" target="_blank" rel="noopener" style="width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(244,236,216,.45);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:border-color .3s;background:rgba(0,0,0,.25);" onmouseover="this.style.borderColor=\'rgba(244,236,216,.9)\'" onmouseout="this.style.borderColor=\'rgba(244,236,216,.45)\'">'
+            +'<svg viewBox="0 0 16 16" style="width:18px;height:18px;fill:rgba(244,236,216,.8);margin-left:3px;"><polygon points="4,2 14,8 4,14"/></svg>'
+          +'</a>'
+        +'</div>'
+        +'<div style="position:absolute;bottom:12px;left:14px;right:14px;z-index:1;">'
+          +'<div style="font-size:11px;font-weight:600;color:rgba(244,236,216,.9);letter-spacing:.15em;">'+v.title+'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+  return '<div style="position:absolute;inset:0;background:#080503;display:flex;flex-direction:column;">'
+    +'<div style="flex:1;display:flex;gap:3px;padding:3px;">'
+    +cards
+    +'</div>'
+    +'<div style="padding:14px 20px;background:#060402;border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;">'
+      +'<div style="font-size:10px;letter-spacing:.4em;color:rgba(244,236,216,.25);font-family:Noto Sans SC,sans-serif;">个人创作 · 五部系列</div>'
+    +'</div>'
+  +'</div>';
+}
+
+function initGala(){
+  var el0=document.getElementById('gala-thumb-0');
+  if(el0) el0.style.backgroundImage="url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF01%E4%BA%95.png')";
+  var el1=document.getElementById('gala-thumb-1');
+  if(el1) el1.style.backgroundImage="url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF02%E9%97%A8.png')";el1.style.backgroundPosition='right center';
+  var el2=document.getElementById('gala-thumb-2');
+  if(el2) el2.style.backgroundImage="url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF03%E6%B8%85%E8%AF%97.png')";
+  var el3=document.getElementById('gala-thumb-3');
+  if(el3) el3.style.backgroundImage="url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF05%E8%80%81%E5%86%9C%E6%B0%91.png')";
+  var el4=document.getElementById('gala-thumb-4');
+  if(el4) el4.style.backgroundImage="url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E6%97%AE%E6%97%AF05%E8%BD%A6%E7%AA%97.png')";
+}
+
+function renderLittlefire(){
+  return '<div style="position:absolute;inset:0;overflow-y:auto;background:#080503;">'
+    /* cover + title overlay (same as standard detail page) */
+    +'<div style="position:relative;height:65%;min-height:360px;flex-shrink:0;">'
+      +'<div style="position:absolute;inset:0;background-image:url(\'https://raw.githubusercontent.com/southyang99-ux/southresume/main/littlefireA-01.png\');background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#080503;"></div>'
+      +'<div style="position:absolute;inset:0;background:linear-gradient(to top,#080503 0%,rgba(8,5,3,.6) 40%,transparent 70%);"></div>'
+      +'<div style="position:absolute;bottom:0;left:0;right:0;padding:28px 36px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">'
+        +'<a class="cbtn" href="https://www.bilibili.com/video/BV1mjDFBuEs4/" target="_blank" rel="noopener">前往观看&nbsp;&nbsp;<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" style="width:16px;height:16px;stroke:currentColor;"><path d="M7 17L17 7M17 7H7M17 7V17" stroke-linecap="round"/></svg></a>'
+        +'<div style="font-size:9px;letter-spacing:.55em;color:rgba(244,236,216,.35);font-family:Noto Sans SC,sans-serif;">开发其他</div>'
+        +'<div style="font-size:clamp(20px,3vw,38px);font-weight:700;color:var(--cream);letter-spacing:.05em;">littlefire 项目</div>'
+        +'<div style="font-size:12px;color:rgba(244,236,216,.55);font-family:Noto Sans SC,sans-serif;font-weight:300;line-height:1.7;max-width:420px;letter-spacing:.04em;">以短平快的人员时间分配与环节配合，在最短时间内完成一段动画片段，旨在提升创意开发、效果测试、人员磨合与快速迭代能力。</div>'
+      +'</div>'
+    +'</div>'
+    /* doc content below, partial with fade + paywall */
+    +'<div style="position:relative;overflow:hidden;max-height:780px;padding:28px 0 0;border-top:1px solid rgba(255,255,255,.07);">'
+      +'<div style="padding-bottom:160px;max-width:700px;margin:0 auto;padding-left:28px;padding-right:28px;">'
+        +'<div class="dp-section"><div class="dp-section-title">概述</div><div class="dp-body" style="font-size:15px;"><p>以<strong>海星模式</strong>运作的组织架构，既能灵活、短期、高效、快速出成果，又能在团队、创意、制作、管理等多个维度进行锻炼测试与频繁迭代，<strong>集体前进</strong>。</p></div></div>'
+        +'<div class="dp-section"><div class="dp-section-title">流程</div>'
+          +'<div class="dp-step"><div class="dp-step-num">准备</div><div class="dp-step-text" style="font-size:15px;">开会之前参与的人，每人搜集自己喜欢的参考，可以是视频图片或者文字，喜欢的点可以是故事、画面风格、技术展示等。每人两到三个即可，不宜过多。</div></div>'
+          +'<div class="dp-step"><div class="dp-step-num">创意 Pitch 会</div><div class="dp-step-text" style="font-size:15px;">'
+            +'<strong>Pitch 01</strong>：每个人轮流展示自己搜集的素材，阐述想要制作的东西，进行讲解，不进行讨论（主持需要尽量记录所有创意点）。<br><br>'
+            +'<strong>Pitch 02</strong>：自由讨论，每个人讲对其他人选择的看法，尽量讨论密集和深入（主持者要尽量记录大家感兴趣的点或者可结合的点）。<br><br>'
+            +'<strong>Pitch 03</strong>：通过讨论，选出几个方向，可以是单独的 idea，也可以是几个人互相的结合，甚至是大家讨论后某一个点的延展。<br><br>'
+            +'<strong>Pitch 04</strong>：针对选出来的几个点再进行讨论，逐个讨论后开始投票，得票高的点作为之后制作会的讨论目标。'
+          +'</div></div>'
+          +'<div class="dp-step"><div class="dp-step-num">策划制作会</div><div class="dp-step-text" style="font-size:15px;">'
+            +'针对创意会选出的创意，进行美术探讨和制作分析以及分工及注意事项：<br><br>'
+            +'<strong>1</strong>：讨论好构图分镜以及各环节的美术方面的要求及注意事项。<br>'
+            +'<strong>2</strong>：明确好各环节的制作标准和大致的制作周期。<br>'
+            +'<strong>3</strong>：主持者或者制片，要负责记录各环节标准对接及周期。'
+          +'</div></div>'
+          +'<div class="dp-step"><div class="dp-step-num">制作环节</div><div class="dp-step-text" style="font-size:15px;">包括分镜、气氛图、Layout、配音配乐在内的完整环节。制作过程中，大家需要频繁坦诚沟通交流，吸取他人意见，不吝啬地提出自己的想法，千万不要按部就班像机器一样制作，这不利于形成一个优秀的创作团队氛围。</div></div>'
+          +'<div class="dp-step"><div class="dp-step-num">复盘</div><div class="dp-step-text" style="font-size:15px;">大家自由讨论优点缺点、制作时的想法、解决问题的思路等。主持人要事无巨细地记录，归纳总结按三个要点：<br><br><strong>① 错误规避</strong>——哪些问题可以避免；<br><strong>② 提高加强</strong>——哪些地方可以完善；<br><strong>③ 实践</strong>——吸取经验，规避问题。</div></div>'
+          +'<div class="dp-step"><div class="dp-step-num">整理备份</div><div class="dp-step-text" style="font-size:15px;">主持人把所有环节的所有信息进行整理备份，包括各项目、各环节、讨论的创意及制作文件，作为<strong>创意库、资产库、技术库</strong>等备份资源。</div></div>'
+        +'</div>'
+        +'<div class="dp-section"><div class="dp-section-title">优势</div><div class="dp-advantages">'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">01</span>短时间内产出成片</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">02</span>特殊风格测试高效，优缺点快速呈现在成片上</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">03</span>灵活的组织架构，缺少某环节也可灵活产出</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">04</span>对流程不断迭代与探索</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">05</span>创意库、资产库、技术库的建立储备</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">06</span>团队磨合与融合，互相渗透，有共识性理解</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">07</span>调动员工积极性与参与感</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">08</span>锻炼创作思维、设计思维、视听语言等导演思维</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">09</span>考察薄弱环节，针对性加强</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">10</span>技术测试与迭代</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">11</span>IP 的产生与孵化</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">12</span>所有片段都有潜力扩展成长篇故事</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">13</span>全方位多角度对外展示技术美术能力</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">14</span>灵活自由多变的组织形式</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">15</span>企业模式与个人作品之间的过渡模式</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">16</span>公司大方向的短平快不断迭代</div>'
+          +'<div class="dp-adv-item" style="font-size:14px;"><span class="dp-adv-num">17</span>新人快速融入团队的好时机</div>'
+        +'</div></div>'
+        +'<div class="dp-tip"><div class="dp-tip-label">TIP · 主持人职责</div>'
+          +'<div class="dp-tip-text" style="font-size:14px;">主持人非常重要——不仅要记录每个人的点，还需维持整个环节流程，适时调整讨论方向，启发他人，让不爱说话的人多说，废话多的人少说。就像<strong>抱着一个不存在的气球——不能太松，也不能太紧</strong>，维持整个过程的气氛与热情。</div>'
+        +'</div>'
+        +'<div class="dp-tip" style="margin-top:12px;"><div class="dp-tip-label">TIP · 创作方向</div>'
+          +'<div class="dp-tip-text" style="font-size:14px;">目的性要强，制作开始前一定要明确这个短片要考验的是什么、要至少达到什么效果。注意前期创意的故事性和可拓展性。最好让每个人发掘内心或自己生活中想要的创意。</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(to bottom,transparent,#080503);pointer-events:none;"></div>'
+    +'</div>'
+    /* paywall */
+    +'<div style="display:flex;flex-direction:column;align-items:center;padding:20px 36px 48px;gap:12px;">'
+      +'<div style="font-size:11px;letter-spacing:.3em;color:rgba(244,236,216,.4);font-family:Noto Sans SC,sans-serif;">— 剩余 70% 内容 —</div>'
+      +'<button class="cbtn" id="lfPayBtn">支付一元<br>查看剩余内容</button>'
+    +'</div>'
+  +'</div>';
+}
+
+
+function updateCategoryLabels(){
+  var outer=document.getElementById('shelfOuter1');
+  if(!outer)return;
+  var spines=[...document.querySelectorAll('.spine-card[data-row="1"]')];
+  var lblC=document.getElementById('lbl-company');
+  var lblP=document.getElementById('lbl-personal');
+  if(!lblC||!lblP||spines.length<8)return;
+  let x=0;const lefts=[],widths=[];
+  for(const child of document.getElementById('spineRow1').children){
+    const w=parseFloat(child.style.width)||child.offsetWidth||0;
+    if(child.classList.contains('spine-card')){lefts.push(x);widths.push(w);}
+    x+=w;
+  }
+  if(lefts.length>=4){lblC.style.left=lefts[0]+'px';lblC.style.width=(lefts[3]+widths[3]-lefts[0])+'px';}
+  if(lefts.length>=8){lblP.style.left=lefts[4]+'px';lblP.style.width=(lefts[7]+widths[7]-lefts[4])+'px';}
+}
+
+/* ── Measure aspect ratios of spine cover images ── */
+const spineRatios = {};
+document.querySelectorAll('.spine-card[data-row="1"]').forEach(sp => {
+  const img = sp.querySelector('.sp-img');
+  if (!img) return;
+  const id = sp.dataset.id;
+  // Read background-image url from computed style or inline
+  const style = img.style.backgroundImage || getComputedStyle(img).backgroundImage;
+  const match = style.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+  if (!match) return;
+  const src = match[1];
+  const probe = new Image();
+  probe.onload = () => {
+    spineRatios[id] = probe.naturalWidth / probe.naturalHeight;
+  };
+  probe.src = src;
+});
+
+/* hide cat-div dividers between spine groups, keep floating labels */
+document.querySelectorAll('#shelfOuter1 .cat-div').forEach(el=>el.style.display='none');
+const rowSpines=[...document.querySelectorAll('.spine-card[data-row="1"]')];
+const FW=[14,6,3.8,2.4,1.7,1.2,1];
+const FH=[40,20,8,0,0]; // extra height px by distance
+function fw(d){return FW[Math.min(d,FW.length-1)];}
+function fh(d){return FH[Math.min(d,FH.length-1)];}
+const BASE_H=280;
+function getDivW(){
+  let t=0;
+  document.querySelectorAll('#shelfOuter1 .cat-div').forEach(d=>t+=d.offsetWidth||2);
+  return t;
+}
+function setWidths(hovIdx){
+  const outer=document.getElementById('shelfOuter1');
+  if(!outer)return;
+  const avail=outer.offsetWidth-getDivW();
+  let total=0;rowSpines.forEach((_,i)=>total+=fw(Math.abs(i-hovIdx)));
+  rowSpines.forEach((sp,i)=>{
+    const dist=Math.abs(i-hovIdx);
+    const extra=fh(dist);
+    sp.style.width=(fw(dist)/total*avail)+'px';
+    sp.style.flexShrink='0';
+    sp.style.height=(BASE_H+extra)+'px';
+    sp.style.transform='none';
+    sp.style.boxShadow=dist===0?'0 26px 58px rgba(0,0,0,.55),0 10px 22px rgba(0,0,0,.4)':'none';
+    sp.style.zIndex=dist===0?20:Math.max(1,12-dist);
+    sp.classList.toggle('hov',dist===0);
+    const img=sp.querySelector('.sp-img');
+    if(img){
+      if(dist===0){
+        img.style.setProperty('background-size','contain','important');
+        img.style.setProperty('background-repeat','no-repeat','important');
+      } else {
+        img.style.setProperty('background-size','cover','important');
+        img.style.setProperty('background-repeat','','important');
+      }
+    }
+  });
+  updateCategoryLabels();
+}
+function resetWidths(){
+  const outer=document.getElementById('shelfOuter1');
+  if(!outer)return;
+  const avail=outer.offsetWidth-getDivW();
+  const w=avail/rowSpines.length;
+  rowSpines.forEach(sp=>{
+    sp.style.width=w+'px';sp.style.flexShrink='0';
+    sp.style.height=BASE_H+'px';
+    sp.style.transform='none';
+    sp.style.transformOrigin='';
+    const img=sp.querySelector('.sp-img');
+    if(img){img.style.setProperty('background-size','cover','important');img.style.setProperty('background-repeat','','important');}
+    sp.querySelector('.sp-img').style.filter='none';
+    sp.style.boxShadow='none';sp.style.zIndex='1';
+    sp.classList.remove('hov');
+  });
+  updateCategoryLabels();
+}
+function initShelf(){resetWidths();setTimeout(()=>updateCategoryLabels(),80);}
+window.addEventListener('DOMContentLoaded',initShelf);
+window.addEventListener('resize',initShelf);
+rowSpines.forEach((sp,i)=>{
+  sp.addEventListener('mouseenter',()=>setWidths(i));
+  sp.addEventListener('mouseleave',()=>resetWidths());
+});
+
+function openPlayer(id){
+  const w=WORKS.find(x=>x.id===id);if(!w)return;
+  const idx=WORKS.indexOf(w);
+  document.getElementById('pTtl').textContent=w.title;
+  document.getElementById('pMta').textContent=w.meta;
+  document.getElementById('pDsc').textContent=w.desc;
+  const scr=document.getElementById('pScr');
+  if(w.id==='bniuer'){scr.innerHTML=renderBniuer();setTimeout(initBniuer,30);}
+  else if(w.id==='gala'){scr.innerHTML=renderGala();setTimeout(initGala,30);}
+  else if(w.id==='littlefire'){scr.innerHTML=renderLittlefire();}
+  else {
+    const bg=(w.bvid&&coverCache[w.bvid])?`background-image:url('${coverCache[w.bvid]}');background-size:contain;background-repeat:no-repeat;background-position:center;`:(w.img?`background-image:url('${w.img}');background-size:contain;background-repeat:no-repeat;background-position:center;`:'');
+    const bgCls=bg?'cbg-photo':w.gf;
+    scr.innerHTML=`<div class="cc">
+      <div class="cbg ${bgCls}" style="${bg}"></div>
+      <div class="cct">
+        ${w.url?`<a class="cbtn" style="margin-bottom:12px;" href="${w.url}" target="_blank" rel="noopener">${w.id==='douline'?'试玩 DEMO':'前往观看'}&nbsp;&nbsp;<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M7 17L17 7M17 7H7M17 7V17" stroke-linecap="round"/></svg></a>`:`<div class="cnil" style="margin-bottom:12px;">暂无外链 · 素材整理中</div>`}
+        <div class="cey">${w.group.toUpperCase()}</div>
+        <div class="cttl">${w.title}</div>
+        <div class="cdsc">${w.desc}</div>
+      </div>
+    </div>`;
+  }
+  /* Nav arrows */
+  if(idx>0){
+    const prev=document.createElement('button');
+    prev.className='pnav pnav-prev';
+    prev.innerHTML='<svg viewBox="0 0 24 24" stroke-width="1.5" fill="none"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    prev.onclick=()=>openPlayer(WORKS[idx-1].id);
+    scr.appendChild(prev);
+  }
+  if(idx<WORKS.length-1){
+    const next=document.createElement('button');
+    next.className='pnav pnav-next';
+    next.innerHTML='<svg viewBox="0 0 24 24" stroke-width="1.5" fill="none"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    next.onclick=()=>openPlayer(WORKS[idx+1].id);
+    scr.appendChild(next);
+  }
+  buildSB(id);
+  document.getElementById('pOv').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function buildSB(activeId){
+  const c=document.getElementById('sbScr');c.innerHTML='';let lg=null;
+  WORKS.forEach(w=>{
+    if(w.group!==lg){const g=document.createElement('div');g.className='sbg';g.textContent=w.group;c.appendChild(g);lg=w.group;}
+    const item=document.createElement('div');item.className='sbi'+(w.id===activeId?' active':'');
+    const hasImg=w.bvid&&coverCache[w.bvid];
+    item.innerHTML=`<div class="sbth"><div class="sbti ${hasImg?'':w.gf}" data-bvid="${w.bvid||''}" style="${hasImg?`background-image:url('${coverCache[w.bvid]}')`:''}"></div></div><div class="sbin">${w.title}</div>`;
+    item.addEventListener('click',()=>openPlayer(w.id));
+    c.appendChild(item);
+  });
+}
+function closePlayer(){
+  document.getElementById('pOv').classList.remove('open');
+  document.body.style.overflow='';
+  var audio=document.getElementById('bnAudio');
+  if(audio){audio.pause();audio.currentTime=0;}
+  if(window._bnKey){document.removeEventListener('keydown',window._bnKey);window._bnKey=null;}
+  setTimeout(()=>{document.getElementById('pScr').innerHTML='';},400);
+}
+function lfShowPay(){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  var img=document.createElement('img');
+  img.style.cssText='max-width:80%;max-height:80%;border-radius:8px;display:block;';
+  img.onload=function(){ov.style.opacity='1';};
+  img.onerror=function(){ov.innerHTML='<div style="color:rgba(244,236,216,.6);font-family:Noto Sans SC;letter-spacing:.2em;font-size:14px;">微信：158 1331 2463</div>';};
+  img.src='https://raw.githubusercontent.com/southyang99-ux/southresume/main/yiyuan.png';
+  ov.style.opacity='0';
+  ov.style.transition='opacity .3s';
+  ov.appendChild(img);
+  ov.onclick=function(){ov.remove();};
+  document.body.appendChild(ov);
+  setTimeout(function(){ov.style.opacity='1';},50);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // Load gala spine cover from bilibili
+  (function(){
+    var cb='gc_spine';
+    var s=document.createElement('script');
+    s.src='https://api.bilibili.com/x/web-interface/view?bvid=BV1uh411h75N&callback='+cb;
+    s.onerror=function(){delete window[cb];s.remove();};
+    window[cb]=function(d){
+      try{
+        var pic=d&&d.data&&d.data.pic?d.data.pic.replace('http://','https://'):null;
+        if(pic){
+          var el=document.getElementById('spimg-gala');
+          if(el){el.style.setProperty('background-image',"url('"+pic+"')",'important');el.style.setProperty('background-size','cover','important');}
+          document.querySelectorAll('.sbti.g-gala,.cbg.g-gala').forEach(function(t){t.style.backgroundImage="url('"+pic+"')";t.style.backgroundSize='contain';});
+        }
+      }catch(e){}
+      delete window[cb]; s.remove();
+    };
+    setTimeout(function(){if(window[cb]){delete window[cb];s.remove();}},4000);
+    document.head.appendChild(s);
+  })();
+  (function(){var el=document.getElementById('spimg-xiurongzhen');if(el){var sh=el.querySelector&&el.querySelector('.shimmer');if(sh)sh.remove();el.style.setProperty('background-image',"url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E4%BF%AE%E5%AE%B9%E9%95%87.jpg')", 'important');el.style.setProperty('background-size','cover','important');el.classList.add('loaded');}})();
+  (function(){var el=document.getElementById('spimg-cyberock');if(el){var sh=el.querySelector&&el.querySelector('.shimmer');if(sh)sh.remove();el.style.setProperty('background-image',"url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/cyberock.png')", 'important');el.style.setProperty('background-size','cover','important');el.classList.add('loaded');}})();
+  (function(){var el=document.getElementById('spimg-fantasygirl');if(el){var sh=el.querySelector&&el.querySelector('.shimmer');if(sh)sh.remove();el.style.setProperty('background-image',"url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/fantasygirl.jpg')", 'important');el.style.setProperty('background-size','cover','important');el.classList.add('loaded');}})();
+  (function(){var el=document.getElementById('spimg-goodmorning');if(el){var sh=el.querySelector&&el.querySelector('.shimmer');if(sh)sh.remove();el.style.setProperty('background-image',"url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/goodmorning.jpg')", 'important');el.style.setProperty('background-size','cover','important');el.classList.add('loaded');}})();
+  (function(){var el=document.getElementById('spimg-shishi');if(el){var sh=el.querySelector&&el.querySelector('.shimmer');if(sh)sh.remove();el.style.setProperty('background-image',"url('https://raw.githubusercontent.com/southyang99-ux/southresume/main/%E5%8D%81%E5%8D%81.png')", 'important');el.style.setProperty('background-size','cover','important');el.classList.add('loaded');}})();
+
+  document.getElementById('pCls').addEventListener('click',closePlayer);
+  document.getElementById('ovBg').addEventListener('click',closePlayer);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closePlayer();});
+  document.querySelectorAll('.spine-card[data-id]').forEach(c=>c.addEventListener('click',()=>openPlayer(c.dataset.id)));
+  document.querySelectorAll('.dev-card[data-id]').forEach(c=>c.addEventListener('click',()=>openPlayer(c.dataset.id)));
+  WORKS.forEach(w=>{if(w.bvid)loadCover(w.bvid,w.id);});});
+const cur2=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function tick(){cur2.style.left=mx+'px';cur2.style.top=my+'px';rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tick);})();
+document.querySelectorAll('a,button,.sbi,.cbtn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur2.style.transform='translate(-50%,-50%) scale(2.5)';cur2.style.background='var(--gold)';});
+  el.addEventListener('mouseleave',()=>{cur2.style.transform='translate(-50%,-50%) scale(1)';cur2.style.background='var(--red)';});
+});
+
+/* Wire lfPayBtn dynamically when player opens */
+new MutationObserver(function(){
+  var btn=document.getElementById('lfPayBtn');
+  if(btn&&!btn._wired){btn._wired=true;btn.addEventListener('click',lfShowPay);}
+}).observe(document.body,{childList:true,subtree:true});
+
+const cv=document.getElementById('leaf-canvas'),ctx=cv.getContext('2d');
+cv.width=innerWidth;cv.height=innerHeight;
+addEventListener('resize',()=>{cv.width=innerWidth;cv.height=innerHeight;});
+const LC=['#C0392B','#E07B39','#7A8C6E','#C8922A','#8B4513','#D4503E','#9C7250'];
+class Leaf{
+  constructor(){this.reset(true);}
+  reset(i){this.x=Math.random()*cv.width;this.y=i?Math.random()*cv.height*1.5-cv.height*.5:-60;this.sz=8+Math.random()*18;this.vy=.4+Math.random()*.8;this.vx=(Math.random()-.5)*.6;this.rot=Math.random()*Math.PI*2;this.rs=(Math.random()-.5)*.025;this.col=LC[~~(Math.random()*LC.length)];this.op=.1+Math.random()*.22;this.wb=Math.random()*Math.PI*2;this.ws=.015+Math.random()*.02;this.t=~~(Math.random()*3);}
+  draw(){ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.rot);ctx.globalAlpha=this.op;ctx.fillStyle=this.col;ctx.beginPath();const s=this.sz;if(this.t===0){ctx.moveTo(0,-s);ctx.bezierCurveTo(s*.8,-s*.6,s*1.2,s*.2,0,s*.9);ctx.bezierCurveTo(-s*1.2,s*.2,-s*.8,-s*.6,0,-s);}else if(this.t===1){ctx.ellipse(0,0,s*.4,s,0,0,Math.PI*2);}else{ctx.arc(0,0,s*.7,0,Math.PI*2);}ctx.fill();ctx.restore();}
+  update(){this.wb+=this.ws;this.x+=this.vx+Math.sin(this.wb)*.5;this.y+=this.vy;this.rot+=this.rs;if(this.y>cv.height+60)this.reset();}
+}
+const leaves=Array.from({length:35},()=>new Leaf());
+(function al(){ctx.clearRect(0,0,cv.width,cv.height);leaves.forEach(l=>{l.update();l.draw();});requestAnimationFrame(al);})();</script>
+</body>
+</html>
